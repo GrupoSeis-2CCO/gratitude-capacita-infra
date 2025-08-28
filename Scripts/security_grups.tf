@@ -1,68 +1,39 @@
-# security_groups.tf - Security Groups para EC2
-
-# Security Group para ALB
-resource "aws_security_group" "alb" {
-  name   = "${var.project_name}-alb-sg"
-  vpc_id = aws_vpc.main.id
+resource "aws_security_group" "sg_publica_gratitude" {
+  name = "sg_publica_gratitude"
+  description = "Permite SSH de qualquer IP"
+  vpc_id = aws_vpc.vpc_cco_gratitude.id
 
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 22
+    to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.cidr_qualquer_ip]
   }
 
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.project_name}-alb-sg"
+    cidr_blocks = [var.cidr_qualquer_ip]
   }
 }
 
-# Security Group para EC2
-resource "aws_security_group" "ec2" {
-  name   = "${var.project_name}-ec2-sg"
-  vpc_id = aws_vpc.main.id
+resource "aws_security_group" "sg_privada_gratitude" {
+  name = "sg_privada_gratitude"
+  description = "Permite SSH de qualquer IP"
+  vpc_id = aws_vpc.vpc_cco_gratitude.id
 
   ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.vpc_cco_gratitude.cidr_block]
   }
-
-  # Removido SSH - sem necessidade de acesso direto
 
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.project_name}-ec2-sg"
-  }
-}
-
-# Security Group para RDS
-resource "aws_security_group" "rds" {
-  name   = "${var.project_name}-rds-sg"
-  vpc_id = aws_vpc.main.id
-
-  ingress {
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ec2.id]
-  }
-
-  tags = {
-    Name = "${var.project_name}-rds-sg"
+    cidr_blocks = [var.cidr_qualquer_ip]
   }
 }
