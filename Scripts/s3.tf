@@ -1,29 +1,28 @@
-# Buckets S3 para RAW, TRUSTED e CLIENT
-resource "aws_s3_bucket" "raw" {
-  bucket = "gratitude-raw-${random_string.bucket_aleatorio.result}"
+# Buckets S3 para Bronze, Silver e Gold
+resource "aws_s3_bucket" "bronze" {
+  bucket = "gratitude-bronze-${random_string.bucket_aleatorio.result}"
   force_destroy = true
   tags = {
-    Name = "gratitude-raw"
+    Name = "gratitude-bronze"
   }
 }
 
-resource "aws_s3_bucket" "trusted" {
-  bucket = "gratitude-trusted-${random_string.bucket_aleatorio.result}"
+resource "aws_s3_bucket" "silver" {
+  bucket = "gratitude-silver-${random_string.bucket_aleatorio.result}"
   force_destroy = true
   tags = {
-    Name = "gratitude-trusted"
+    Name = "gratitude-silver"
   }
 }
 
-resource "aws_s3_bucket" "client" {
-  bucket = "gratitude-client-${random_string.bucket_aleatorio.result}"
+resource "aws_s3_bucket" "gold" {
+  bucket = "gratitude-gold-${random_string.bucket_aleatorio.result}"
   force_destroy = true
   tags = {
-    Name = "gratitude-client"
+    Name = "gratitude-gold"
   }
 }
 
-# Gerador de sufixo único para buckets S3
 resource "random_string" "bucket_aleatorio" {
   length  = 8
   special = false
