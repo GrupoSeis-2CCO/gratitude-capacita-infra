@@ -1,11 +1,28 @@
 resource "aws_security_group" "sg_publica_gratitude" {
-  name = "sg_publica_gratitude"
-  description = "Permite SSH de qualquer IP"
-  vpc_id = aws_vpc.vpc_cco_gratitude.id
+  name        = "sg_publica_gratitude"
+  description = "Permite acesso HTTP, HTTPS e SSH de qualquer IP"
+  vpc_id      = aws_vpc.vpc_cco_gratitude.id
 
   ingress {
+    description = "SSH"
     from_port   = 22
     to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.cidr_qualquer_ip]
+  }
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [var.cidr_qualquer_ip]
+  }
+
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = [var.cidr_qualquer_ip]
   }
@@ -15,19 +32,80 @@ resource "aws_security_group" "sg_publica_gratitude" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = [var.cidr_qualquer_ip]
+  }
+
+  tags = {
+    Name = "sg_publica_gratitude"
   }
 }
 
-resource "aws_security_group" "sg_privada_gratitude" {
-  name = "sg_privada_gratitude"
-  description = "Permite SSH de qualquer IP"
-  vpc_id = aws_vpc.vpc_cco_gratitude.id
+resource "aws_security_group" "sg_privada1_gratitude" {
+  name        = "sg_privada1_gratitude"
+  description = "Permite acesso apenas das EC2s públicas"
+  vpc_id      = aws_vpc.vpc_cco_gratitude.id
 
   ingress {
-    from_port   = 22
-    to_port     = 22
+    description     = "Acesso interno das EC2s públicas"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.sg_publica_gratitude.id]
+  }
+
+  ingress {
+    description     = "SSH das EC2s públicas"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.sg_publica_gratitude.id]
+  }
+
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [aws_vpc.vpc_cco_gratitude.cidr_block]
+    cidr_blocks = [aws_security_group.sg_publica_gratitude.id]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [var.cidr_qualquer_ip]
+  }
+
+  tags = {
+    Name = "sg_privada1_gratitude"
+  }
+}
+
+resource "aws_security_group" "sg_privada2_gratitude" {
+  name        = "sg_privada2_gratitude"
+  description = "Permite acesso apenas das EC2s privadas do grupo 1"
+  vpc_id      = aws_vpc.vpc_cco_gratitude.id
+
+  ingress {
+    description     = "Acesso interno das EC2s privadas grupo 1"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.sg_privada1_gratitude.id]
+  }
+
+  ingress {
+    description     = "SSH das EC2s privadas grupo 1"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.sg_privada1_gratitude.id]
+  }
+
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [aws_security_group.sg_privada1_gratitude.id]
   }
 
   egress {
@@ -35,5 +113,9 @@ resource "aws_security_group" "sg_privada_gratitude" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = [var.cidr_qualquer_ip]
+  }
+
+  tags = {
+    Name = "sg_privada2_gratitude"
   }
 }
