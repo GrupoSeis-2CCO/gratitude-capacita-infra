@@ -9,6 +9,8 @@ from diagrams.programming.language import Python
 from diagrams.programming.language import Java
 from diagrams.programming.framework import React
 from diagrams.programming.framework import Spring
+from diagrams.aws.management import Cloudwatch
+from diagrams.aws.integration import SimpleNotificationServiceSns as SNS
 
 with Diagram(
     name = "Diagrama de Rede Gratitude Capacita",
@@ -40,21 +42,20 @@ with Diagram(
                 with Cluster("Zona de disponibilidade us-east-1a", graph_attr={"bgcolor": "#747474e0", "fontsize": "14", "fontcolor": "#000000"}):
                     with Cluster("Security Group Privado 1", graph_attr={"fontcolor": "#000000"}):
                         mysql = Custom("MySQL", "Diagrams/Icons/MySQL.png")
-                        ec2_priv_02 = EC2("EC2 PRIV 02")
+                        ec2_priv_db = EC2("Ec2 Priv DB")
                     with Cluster("Security Group Privado 2", graph_attr={"fontcolor": "#000000"}):
                         java = Java("Java")
                         spring = Spring("Spring")
-                        ec2_priv_01 = EC2("EC2 PRIV 01")
+                        ec2_priv_be = EC2("Ec2 Priv BE")
 
             with Cluster("Sub-rede Pública", graph_attr={"bgcolor": "#26ff0060", "fontsize": "16", "fontcolor": "#000000"}):
-                docker = Docker("Docker")
                 with Cluster("Zona de disponibilidade us-east-1a", graph_attr={"bgcolor": "#747474e0", "fontsize": "14", "fontcolor": "#000000"}):
                     with Cluster("Security Group Público", graph_attr={"fontcolor": "#000000"}):
-                        ec2_pub_01 = EC2("EC2 PUB 01")
+                        ec2_pub_01 = EC2("Ec2 Pub 01")
                         react = React("React App")
                 with Cluster("Zona de disponibilidade us-east-1b"):
                     with Cluster("Security Group Público", graph_attr={"fontcolor": "#000000"}):
-                        ec2_pub_02 = EC2("EC2 PUB 02")
+                        ec2_pub_02 = EC2("Ec2 Pub 02")
                         react_icon = React("React App")
 
         # S3 e ETL cluster ao lado das sub-redes
@@ -65,16 +66,21 @@ with Diagram(
             etl_bs = Python("ETL BS Python")
             etl_sg = Python("ETL SG Python")
 
+        with Cluster("Monitoramento", graph_attr={"bgcolor": "#e7157baa"}):
+            cloudwatch = Cloudwatch("CloudWatch")
+            sns = SNS("SNS")
+
         # Ligações horizontais
-        ec2_pub_01 >> Edge(color="black") >> bronze
+        ec2_pub_01 >> Edge(color="black") >> bronze     
         ec2_pub_02 >> Edge(color="black") >> bronze
         bronze >> Edge(color="bronze") >> etl_bs
         etl_bs >> Edge(color="silver") >> silver
         silver >> Edge(color="silver") >> etl_sg
         etl_sg >> Edge(color="gold") >> gold
+        gold >> Edge(color="black") >> ec2_pub_01
 
         lb << Edge(color="green") >> ec2_pub_01
         lb << Edge(color="green") >> ec2_pub_02
-        lb << Edge(color="blue") >> ec2_priv_01
-        lb << Edge(color="blue") >> ec2_priv_02
+        lb << Edge(color="blue") >> ec2_priv_be
+        lb << Edge(color="blue") >> ec2_priv_db
 
