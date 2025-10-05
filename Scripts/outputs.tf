@@ -41,7 +41,7 @@ output "ssh_backend_command" {
 }
 
 output "mysql_local_command" {
-  value       = "sudo mysql -u root -p'${mysql_root_password}' Capacita"
+  value       = "sudo mysql -u root -p'${var.mysql_root_password}' capacita"
   description = "Comando MySQL para conectar no banco local (dentro da EC2 backend)"
-  sensitive   = false
+  sensitive   = true
 }
