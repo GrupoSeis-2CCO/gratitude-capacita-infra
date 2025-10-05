@@ -1,0 +1,4 @@
+# Exemplo de arquivo terraform.tfvars - COPIE para terraform.tfvars e preencha com seus valores
+# NÃO commite terraform.tfvars no Git!
+
+mysql_root_password = "SuaSenhaAqui"

@@ -1,0 +1,22 @@
+# Enforce LF for scripts and text files that must use Unix EOL
+*.sh text eol=lf
+*.py text eol=lf
+*.tf text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.json text eol=lf
+*.properties text eol=lf
+*.sql text eol=lf
+
+# Treat binary files as binary
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+
+# Keys and PEM files - keep as binary
+keys/* binary
+*.pem binary

@@ -39,10 +39,18 @@ resource "aws_security_group" "sg_publica_gratitude" {
   }
 }
 
-resource "aws_security_group" "sg_privada1_gratitude" {
-  name        = "sg_privada1_gratitude"
+resource "aws_security_group" "sg_privada_backend_gratitude" {
+  name        = "sg_privada_backend_gratitude"
   description = "Permite acesso apenas das EC2s publicas"
   vpc_id      = aws_vpc.vpc_cco_gratitude.id
+
+  ingress {
+    description     = "Spring Boot API"
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = "tcp"
+    security_groups = [aws_security_group.sg_publica_gratitude.id]
+  }
 
   ingress {
     description     = "Acesso interno das EC2s publicas"
@@ -75,12 +83,12 @@ resource "aws_security_group" "sg_privada1_gratitude" {
   }
 
   tags = {
-    Name = "sg_privada1_gratitude"
+    Name = "sg_privada_backend_gratitude"
   }
 }
 
-resource "aws_security_group" "sg_privada2_gratitude" {
-  name        = "sg_privada2_gratitude"
+resource "aws_security_group" "sg_privada_bd_gratitude" {
+  name        = "sg_privada_bd_gratitude"
   description = "Permite acesso apenas das EC2s privadas do grupo 1"
   vpc_id      = aws_vpc.vpc_cco_gratitude.id
 
@@ -89,7 +97,7 @@ resource "aws_security_group" "sg_privada2_gratitude" {
     from_port       = 80
     to_port         = 80
     protocol        = "tcp"
-    security_groups = [aws_security_group.sg_privada1_gratitude.id]
+    security_groups = [aws_security_group.sg_privada_backend_gratitude.id]
   }
 
   ingress {
@@ -97,7 +105,7 @@ resource "aws_security_group" "sg_privada2_gratitude" {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = [aws_security_group.sg_privada1_gratitude.id]
+    security_groups = [aws_security_group.sg_privada_backend_gratitude.id]
   }
 
   ingress {
@@ -116,6 +124,6 @@ resource "aws_security_group" "sg_privada2_gratitude" {
   }
 
   tags = {
-    Name = "sg_privada2_gratitude"
+    Name = "sg_privada_bd_gratitude"
   }
 }

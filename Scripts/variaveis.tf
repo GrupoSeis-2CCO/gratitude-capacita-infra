@@ -21,3 +21,9 @@ variable "cidr_privada" {
   type        = string
   default     = "10.0.2.0/24" # IPs de 10.0.2.0 a 10.0.2.255
 }
+
+variable "mysql_root_password" {
+  description = "Senha do MySQL root (definir no terraform.tfvars)"
+  type        = string
+  sensitive   = true
+}

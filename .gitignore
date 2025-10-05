@@ -19,3 +19,15 @@ crash.*.log
 
 # Aquivos de lock
 .terraform.lock.*
+
+# Variáveis de ambiente sensíveis
+.env
+*.pem
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
