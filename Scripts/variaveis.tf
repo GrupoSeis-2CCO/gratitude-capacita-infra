@@ -27,3 +27,9 @@ variable "mysql_root_password" {
   type        = string
   sensitive   = true
 }
+
+variable "jwt_secret" {
+  description = "Secret para assinar tokens JWT (definir no terraform.tfvars - min 32 chars)"
+  type        = string
+  sensitive   = true
+}

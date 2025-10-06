@@ -39,6 +39,7 @@ resource "aws_instance" "ec2_privada_gratitude_backend" {
     silver_bucket       = aws_s3_bucket.silver.id
     gold_bucket         = aws_s3_bucket.gold.id
     mysql_root_password = var.mysql_root_password
+    jwt_secret          = var.jwt_secret
   })
   user_data_replace_on_change = true
 

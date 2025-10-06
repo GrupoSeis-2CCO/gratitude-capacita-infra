@@ -82,39 +82,50 @@ fi
 # Criar diretorio do app
 mkdir -p /opt/app
 
-# Gerar secret para JWT (runtime) — será expandido pelo shell no momento do provisionamento
-JWT_SECRET=$(openssl rand -base64 32)
-echo "Generated JWT secret (first 8 chars): $${JWT_SECRET:0:8}"
-
 # Baixar JAR do GitHub
 wget -O /opt/app/app.jar https://github.com/GrupoSeis-2CCO/be-gratitude-capacita/releases/download/NEW/be-gratitude-capacita-0.0.1-SNAPSHOT.jar
 chmod +x /opt/app/app.jar
 
-# Criar application.properties (com TODAS as propriedades que o Spring precisa)
+# Criar application.properties externo (sobrescreve o interno do JAR)
+# IMPORTANTE: jwt.secret será passado via variável de ambiente no systemd service
 cat > /opt/app/application.properties <<EOF
+# Application name
+spring.application.name=crud-gratitude-servicos
+
+# Server
 server.port=8081
-spring.datasource.url=jdbc:mysql://localhost:3306/capacita
+
+# Database MySQL
+spring.datasource.url=jdbc:mysql://localhost:3306/capacita?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
 spring.datasource.username=root
 spring.datasource.password=${mysql_root_password}
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+spring.datasource.initialization-mode=always
+
+# JPA / Hibernate
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=false
+spring.jpa.defer-datasource-initialization=true
+# Desabilitar execucao automatica de data.sql (ja executamos manualmente no user-data)
+spring.sql.init.mode=never
 
-# Configuracoes AWS S3 (nomes vindos do Terraform)
+# AWS S3 (nomes vindos do Terraform)
 aws.s3.region=us-east-1
 aws.s3.bucket.bronze=${bronze_bucket}
 aws.s3.bucket.silver=${silver_bucket}
 aws.s3.bucket.gold=${gold_bucket}
-# JWT secret used by the application; generated at instance boot
-jwt.secret=$JWT_SECRET
+
+# JWT - tempo de expiracao em milissegundos (1 hora)
+jwt.validity=3600000
+# JWT secret FIXO (passado via Terraform)
+jwt.secret=${jwt_secret}
 EOF
 
 # Ajustar dono do diretório do app para o usuário que executará o serviço
 chown -R ubuntu:ubuntu /opt/app
 
 # Criar servico Spring Boot
-cat > /etc/systemd/system/spring-app.service <<'EOF'
+cat > /etc/systemd/system/spring-app.service <<EOF
 [Unit]
 Description=Spring Boot Gratitude App
 After=mysql.service
