@@ -3,7 +3,7 @@ resource "aws_instance" "ec2_publica_gratitude_1" {
   ami           = "ami-080e1f13689e07408"
   instance_type = "t2.micro"
   key_name      = "vockey"
-  subnet_id     = aws_subnet.subrede_publica1_gratitude.id
+  subnet_id     = aws_subnet.subrede_publica_gratitude.id
   vpc_security_group_ids = [aws_security_group.sg_publica_gratitude.id]
   associate_public_ip_address = true
 

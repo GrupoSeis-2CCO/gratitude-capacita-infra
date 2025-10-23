@@ -9,7 +9,7 @@ resource "aws_eip" "nat_eip" {
 # NAT Gateway na subnet pública
 resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat_eip.id
-  subnet_id     = aws_subnet.subrede_publica1_gratitude.id
+  subnet_id     = aws_subnet.subrede_publica_gratitude.id
   tags = {
     Name = "nat_gratitude"
   }

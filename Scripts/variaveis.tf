@@ -33,3 +33,19 @@ variable "jwt_secret" {
   type        = string
   sensitive   = true
 }
+
+# ====================================
+# VARIÁVEIS DO PIPELINE DE DADOS
+# ====================================
+
+variable "project_name" {
+  description = "Nome do projeto"
+  type        = string
+  default     = "projeto-pi-dados"
+}
+
+variable "environment" {
+  description = "Ambiente (dev, prod)"
+  type        = string
+  default     = "dev"
+}

@@ -1,8 +1,0 @@
-# Exemplo de arquivo terraform.tfvars - COPIE para terraform.tfvars e preencha com seus valores
-# NÃO commite terraform.tfvars no Git!
-
-mysql_root_password = "SuaSenhaAqui"
-
-# JWT Secret - DEVE ter pelo menos 32 caracteres
-# Gere um novo com: openssl rand -base64 32
-jwt_secret = "O_JWT_Secret_Aqui"
