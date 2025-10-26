@@ -1,0 +1,91 @@
+#!/bin/bash
+# User-data para EC2 Frontend (Pública)
+# Prepara ambiente Docker + Nginx com configuração inicial
+
+exec > >(tee /var/log/user-data-frontend.log)
+exec 2>&1
+
+echo "=== Iniciando configuração frontend $(date) ==="
+
+# Variáveis de configuração (serão substituídas pelo Terraform)
+BACKEND_HOST="${BACKEND_PRIVATE_IP}"  # IP privado da EC2 Backend (via Terraform)
+BACKEND_PORT="8080"
+
+# Instalar Docker
+apt-get update -y
+apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+apt-get update -y
+apt-get install -y docker-ce docker-ce-cli containerd.io
+
+systemctl enable docker
+systemctl start docker
+usermod -aG docker ubuntu
+
+# Instalar Docker Compose
+curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m) -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+# Criar diretórios para CI/CD
+mkdir -p /home/ubuntu/frontend
+mkdir -p /home/ubuntu/nginx-config
+mkdir -p /home/ubuntu/backend-deploy
+
+# Criar configuração padrão do Nginx com proxy para o backend
+cat > /home/ubuntu/nginx-config/default.conf << 'NGINXCONF'
+server {
+    listen 80;
+    server_name _;
+    
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Logs
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    # Frontend React - SPA routing (todas as rotas vão para index.html)
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy reverso para o backend no Droplet DigitalOcean
+    location /api/ {
+        proxy_pass http://BACKEND_HOST:BACKEND_PORT/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # CORS headers
+        add_header 'Access-Control-Allow-Origin' '*' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type' always;
+        
+        if ($request_method = 'OPTIONS') {
+            return 204;
+        }
+    }
+}
+NGINXCONF
+
+# Substituir variáveis na configuração do Nginx
+sed -i "s|BACKEND_HOST|${BACKEND_HOST}|g" /home/ubuntu/nginx-config/default.conf
+sed -i "s|BACKEND_PORT|${BACKEND_PORT}|g" /home/ubuntu/nginx-config/default.conf
+
+# Ajustar permissões
+chown -R ubuntu:ubuntu /home/ubuntu/frontend /home/ubuntu/nginx-config /home/ubuntu/backend-deploy
+
+echo "=== Ambiente frontend pronto para CI/CD (Docker Compose) ==="
+echo "=== User-data concluído $(date) ==="

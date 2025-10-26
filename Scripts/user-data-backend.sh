@@ -1,163 +1,86 @@
 #!/bin/bash
+# User-data para EC2 Backend (Privada)
+# Apenas prepara o ambiente - CI/CD fará o deploy
 
-# Redirecionar toda a saída para um log
-exec > >(tee /var/log/user-data.log)
+exec > >(tee /var/log/user-data-backend.log)
 exec 2>&1
 
-echo "=== Iniciando user-data script $(date) ==="
+echo "=== Iniciando configuração backend $(date) ==="
 
-# Instalar MySQL, Java 21, Maven, Git, OpenSSL e AWS CLI
-echo "=== Instalando pacotes ==="
+# Instalar dependências básicas
 apt-get update -y
-apt-get install -y mysql-server git maven wget unzip awscli openssl
+apt-get install -y mysql-server wget unzip awscli ca-certificates curl gnupg
 
-# Instalar Java 21 manualmente (OpenJDK 21)
-wget https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.tar.gz
+# Instalar Docker
+echo "=== Instalando Docker ==="
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+apt-get update -y
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Adicionar ubuntu ao grupo docker
+usermod -aG docker ubuntu
+
+# Iniciar e habilitar Docker
+systemctl start docker
+systemctl enable docker
+
+echo "=== Docker instalado com sucesso ==="
+
+# Instalar Java 21 (ainda necessário para build, mas runtime será no container)
+echo "=== Instalando Java 21 ==="
+wget -q https://download.oracle.com/java/21/latest/jdk-21_linux-x64_bin.tar.gz
 tar -xzf jdk-21_linux-x64_bin.tar.gz -C /opt/
-ln -s /opt/jdk-21.* /opt/jdk-21
+ln -sf /opt/jdk-21.* /opt/jdk-21
 echo 'export JAVA_HOME=/opt/jdk-21' >> /etc/profile.d/jdk.sh
 echo 'export PATH=$JAVA_HOME/bin:$PATH' >> /etc/profile.d/jdk.sh
-source /etc/profile.d/jdk.sh
 
 # Configurar MySQL
+echo "=== Configurando MySQL ==="
+
+# Configurar MySQL para aceitar conexões externas (necessário para Docker)
+sed -i 's/bind-address.*/bind-address = 0.0.0.0/' /etc/mysql/mysql.conf.d/mysqld.cnf
+
 systemctl start mysql
-sleep 10
+systemctl enable mysql
+sleep 5
 
 # Configurar senha do root
-sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${mysql_root_password}';"
-sudo mysql -e "FLUSH PRIVILEGES;"
+mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${mysql_root_password}';"
+mysql -e "FLUSH PRIVILEGES;"
 
-# Criar database e rodar schema
-echo "=== Criando database capacita ==="
-mysql -u root -p'${mysql_root_password}' -e "CREATE DATABASE IF NOT EXISTS capacita;"
-
-echo "=== Baixando schema.sql ==="
-wget -O /tmp/schema.sql https://raw.githubusercontent.com/GrupoSeis-2CCO/be-gratitude-capacita/main/Database/Script.sql
-
-if [ ! -f /tmp/schema.sql ]; then
-    echo "=== ERRO: schema.sql não foi baixado! ==="
-    exit 1
-fi
-
-echo "=== Executando schema.sql ==="
-mysql -u root -p'${mysql_root_password}' capacita < /tmp/schema.sql 2>&1 | tee /tmp/schema-output.log
-
-SCHEMA_EXIT_CODE=$?
-if [ $SCHEMA_EXIT_CODE -ne 0 ]; then
-    echo "=== ERRO ao executar schema.sql: ==="
-    cat /tmp/schema-output.log
-    exit 1
-else
-    echo "=== schema.sql executado sem erros ==="
-fi
-
-echo "=== Verificando se as tabelas foram criadas ==="
-mysql -u root -p'${mysql_root_password}' capacita -e "SHOW TABLES;"
-
-# Baixar e executar data.sql (dados iniciais - inserts de usuario, cargo, etc)
-echo "=== Baixando data.sql ==="
-wget -O /tmp/data.sql https://raw.githubusercontent.com/GrupoSeis-2CCO/be-gratitude-capacita/main/src/main/resources/data.sql
-
-if [ -f /tmp/data.sql ]; then
-    echo "=== data.sql baixado com sucesso ==="
-    
-    echo "=== Executando data.sql no database capacita ==="
-    mysql -u root -p'${mysql_root_password}' capacita < /tmp/data.sql
-    
-    if [ $? -eq 0 ]; then
-        echo "=== data.sql executado com sucesso ==="
-    else
-        echo "=== ERRO ao executar data.sql ==="
-    fi
-    
-    echo "=== Verificando dados inseridos ==="
-    mysql -u root -p'${mysql_root_password}' capacita -e "SELECT COUNT(*) as total_cargos FROM cargo;"
-    mysql -u root -p'${mysql_root_password}' capacita -e "SELECT COUNT(*) as total_usuarios FROM usuario;"
-    mysql -u root -p'${mysql_root_password}' capacita -e "SELECT * FROM cargo;"
-    mysql -u root -p'${mysql_root_password}' capacita -e "SELECT id, nome, email FROM usuario;"
-else
-    echo "=== ERRO: data.sql não foi baixado! ==="
-fi
-
-# Criar diretorio do app
-mkdir -p /opt/app
-
-# Baixar JAR do GitHub
-wget -O /opt/app/app.jar https://github.com/GrupoSeis-2CCO/be-gratitude-capacita/releases/download/NEW/be-gratitude-capacita-0.0.1-SNAPSHOT.jar
-chmod +x /opt/app/app.jar
-
-# Criar application.properties externo (sobrescreve o interno do JAR)
-# IMPORTANTE: jwt.secret será passado via variável de ambiente no systemd service
-cat > /opt/app/application.properties <<EOF
-# Application name
-spring.application.name=crud-gratitude-servicos
-
-# Server
-server.port=8081
-
-# Database MySQL
-spring.datasource.url=jdbc:mysql://localhost:3306/capacita?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-spring.datasource.username=root
-spring.datasource.password=${mysql_root_password}
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-spring.datasource.initialization-mode=always
-
-# JPA / Hibernate
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=false
-spring.jpa.defer-datasource-initialization=true
-# Desabilitar execucao automatica de data.sql (ja executamos manualmente no user-data)
-spring.sql.init.mode=never
-
-# AWS S3 (nomes vindos do Terraform)
-aws.s3.region=us-east-1
-aws.s3.bucket.bronze=${bronze_bucket}
-aws.s3.bucket.silver=${silver_bucket}
-aws.s3.bucket.gold=${gold_bucket}
-
-# JWT - tempo de expiracao em milissegundos (1 hora)
-jwt.validity=3600000
-# JWT secret FIXO (passado via Terraform)
-jwt.secret=${jwt_secret}
+# Criar database e usuário da aplicação
+# IMPORTANTE: Usuário precisa aceitar conexões de qualquer host (%) para funcionar com Docker
+mysql -u root -p'${mysql_root_password}' <<EOF
+CREATE DATABASE IF NOT EXISTS capacita;
+CREATE USER IF NOT EXISTS '${database_user}'@'%' IDENTIFIED BY '${database_password}';
+GRANT ALL PRIVILEGES ON capacita.* TO '${database_user}'@'%';
+FLUSH PRIVILEGES;
 EOF
 
-# Ajustar dono do diretório do app para o usuário que executará o serviço
-chown -R ubuntu:ubuntu /opt/app
+echo "=== Database capacita criado ==="
+echo "=== Usuário ${database_user} criado com acesso de qualquer host ==="
 
-# Criar servico Spring Boot
-cat > /etc/systemd/system/spring-app.service <<EOF
-[Unit]
-Description=Spring Boot Gratitude App
-After=mysql.service
+# Reiniciar MySQL para aplicar bind-address
+systemctl restart mysql
+sleep 3
 
-[Service]
-User=ubuntu
-WorkingDirectory=/opt/app
-Environment="JAVA_HOME=/opt/jdk-21"
-Environment="PATH=/opt/jdk-21/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-ExecStart=/opt/jdk-21/bin/java -jar /opt/app/app.jar --spring.config.location=file:/opt/app/application.properties
-Restart=always
-RestartSec=10
+echo "=== MySQL configurado para aceitar conexões externas ==="
 
-[Install]
-WantedBy=multi-user.target
-EOF
+# Criar diretório da aplicação (agora /usr/share/api para o Docker)
+mkdir -p /usr/share/api
+chown -R ubuntu:ubuntu /usr/share/api
 
-# Instalar GitHub Actions Runner
-cd /home/ubuntu
-mkdir -p actions-runner && cd actions-runner
-wget -O actions-runner-linux-x64.tar.gz https://github.com/actions/runner/releases/download/v2.311.0/actions-runner-linux-x64-2.311.0.tar.gz
-tar xzf ./actions-runner-linux-x64.tar.gz
-chown -R ubuntu:ubuntu /home/ubuntu/actions-runner
+# Criar diretório para compose files
+mkdir -p /home/ubuntu/api
+chown -R ubuntu:ubuntu /home/ubuntu/api
 
-# Clonar repositorio
-cd /home/ubuntu
-sudo -u ubuntu git clone https://github.com/GrupoSeis-2CCO/be-gratitude-capacita.git
-chown -R ubuntu:ubuntu /home/ubuntu/be-gratitude-capacita
-
-# Iniciar Spring Boot service
-systemctl daemon-reload
-systemctl enable spring-app.service
-systemctl start spring-app.service
-
-echo "Setup completo!"
+echo "=== Ambiente backend pronto para CI/CD (Docker) ==="
+echo "=== User-data concluído $(date) ==="

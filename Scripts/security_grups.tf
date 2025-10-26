@@ -47,7 +47,7 @@ resource "aws_security_group" "sg_privada_backend_gratitude" {
   ingress {
     description     = "Spring Boot API"
     from_port       = 8080
-    to_port         = 8081
+    to_port         = 8080
     protocol        = "tcp"
     security_groups = [aws_security_group.sg_publica_gratitude.id]
   }

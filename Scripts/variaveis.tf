@@ -28,6 +28,19 @@ variable "mysql_root_password" {
   sensitive   = true
 }
 
+variable "database_user" {
+  description = "Usuário do banco de dados da aplicação (definir no terraform.tfvars)"
+  type        = string
+  sensitive   = true
+  default     = "capacita_app"
+}
+
+variable "database_password" {
+  description = "Senha do usuário do banco de dados (definir no terraform.tfvars)"
+  type        = string
+  sensitive   = true
+}
+
 variable "jwt_secret" {
   description = "Secret para assinar tokens JWT (definir no terraform.tfvars - min 32 chars)"
   type        = string

@@ -15,7 +15,7 @@ resource "random_string" "bucket_aleatorio" {
 
 # Buckets S3 para Bronze, Silver e Gold
 resource "aws_s3_bucket" "bronze" {
-  bucket = "gratitude-bronze-${random_string.bucket_aleatorio.result}"
+  bucket = "gratitude-capacita-bronze"
   force_destroy = true
   tags = {
     Name = "gratitude-bronze"
@@ -23,7 +23,7 @@ resource "aws_s3_bucket" "bronze" {
 }
 
 resource "aws_s3_bucket" "silver" {
-  bucket = "gratitude-silver-${random_string.bucket_aleatorio.result}"
+  bucket = "gratitude-capacita-silver"
   force_destroy = true
   tags = {
     Name = "gratitude-silver"
@@ -31,7 +31,7 @@ resource "aws_s3_bucket" "silver" {
 }
 
 resource "aws_s3_bucket" "gold" {
-  bucket = "gratitude-gold-${random_string.bucket_aleatorio.result}"
+  bucket = "gratitude-capacita-gold"
   force_destroy = true
   tags = {
     Name = "gratitude-gold"

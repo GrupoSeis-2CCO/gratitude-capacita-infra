@@ -7,6 +7,10 @@ resource "aws_instance" "ec2_publica_gratitude_1" {
   vpc_security_group_ids = [aws_security_group.sg_publica_gratitude.id]
   associate_public_ip_address = true
 
+  # User data - Instala Docker, NGINX e configura diretórios
+  user_data = file("${path.module}/user-data-frontend.sh")
+  user_data_replace_on_change = true
+
   tags = {
     Name = "01_ec2_publica_gratitude"
   }
@@ -33,13 +37,14 @@ resource "aws_instance" "ec2_privada_gratitude_backend" {
   vpc_security_group_ids      = [aws_security_group.sg_privada_backend_gratitude.id]
   associate_public_ip_address = false
 
-  # User data - Passando nomes dos buckets S3 como variaveis
+  # User data - Prepara ambiente (MySQL, Java, diretórios)
   user_data = templatefile("${path.module}/user-data-backend.sh", {
+    mysql_root_password = var.mysql_root_password
+    database_user       = var.database_user
+    database_password   = var.database_password
     bronze_bucket       = aws_s3_bucket.bronze.id
     silver_bucket       = aws_s3_bucket.silver.id
     gold_bucket         = aws_s3_bucket.gold.id
-    mysql_root_password = var.mysql_root_password
-    jwt_secret          = var.jwt_secret
   })
   user_data_replace_on_change = true
 
