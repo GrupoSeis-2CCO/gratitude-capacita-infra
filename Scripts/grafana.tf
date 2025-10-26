@@ -3,22 +3,14 @@
 # ====================================
 # Configurações do Grafana rodando em ECS Fargate
 
-# VPC para o Grafana (usando VPC padrão simplificado)
-data "aws_vpc" "default" {
-  default = true
-}
+// Usar VPC/Subnets passadas via variáveis (evita chamadas a data sources que exigem permissões)
+# vpc_id e grafana_subnets devem ser fornecidos por terraform.tfvars
 
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
 
 # Security Group para Grafana
 resource "aws_security_group" "grafana_sg" {
   name_prefix = "grafana-sg"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = var.vpc_id
 
   # HTTP access
   ingress {
@@ -70,8 +62,8 @@ resource "aws_ecs_task_definition" "grafana_task" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "512"
   memory                   = "1024"
-  execution_role_arn       = data.aws_iam_role.lab_role.arn
-  task_role_arn           = data.aws_iam_role.lab_role.arn
+  execution_role_arn       = var.lab_role_arn
+  task_role_arn            = var.lab_role_arn
 
   container_definitions = jsonencode([
     {
@@ -138,7 +130,7 @@ resource "aws_ecs_service" "grafana_service" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = data.aws_subnets.default.ids
+    subnets          = var.grafana_subnets
     security_groups  = [aws_security_group.grafana_sg.id]
     assign_public_ip = true
   }

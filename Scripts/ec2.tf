@@ -7,10 +7,6 @@ resource "aws_instance" "ec2_publica_gratitude_1" {
   vpc_security_group_ids = [aws_security_group.sg_publica_gratitude.id]
   associate_public_ip_address = true
 
-  # User data - Instala Docker, NGINX e configura diretórios
-  user_data = file("${path.module}/user-data-frontend.sh")
-  user_data_replace_on_change = true
-
   tags = {
     Name = "01_ec2_publica_gratitude"
   }
@@ -37,16 +33,27 @@ resource "aws_instance" "ec2_privada_gratitude_backend" {
   vpc_security_group_ids      = [aws_security_group.sg_privada_backend_gratitude.id]
   associate_public_ip_address = false
 
-  # User data - Prepara ambiente (MySQL, Java, diretórios)
+  # User data - Passando nomes dos buckets S3 como variaveis
   user_data = templatefile("${path.module}/user-data-backend.sh", {
-    mysql_root_password = var.mysql_root_password
-    database_user       = var.database_user
-    database_password   = var.database_password
     bronze_bucket       = aws_s3_bucket.bronze.id
     silver_bucket       = aws_s3_bucket.silver.id
     gold_bucket         = aws_s3_bucket.gold.id
+    backup_bucket       = var.backup_bucket_name != "" ? var.backup_bucket_name : aws_s3_bucket.db_backups[0].id
+    admin_email         = var.admin_email
+    db_name             = var.db_name
+    db_user             = var.db_user
+    db_password         = var.db_password
+    mysql_root_password = var.mysql_root_password
+    jwt_secret          = var.jwt_secret
+    smtp_host           = var.smtp_host
+    smtp_port           = var.smtp_port
+    smtp_user           = var.smtp_user
+    smtp_pass           = var.smtp_pass
+    smtp_from           = var.smtp_from
   })
   user_data_replace_on_change = true
+
+  iam_instance_profile = var.instance_profile_name != "" ? var.instance_profile_name : (length(aws_iam_instance_profile.backup_profile) > 0 ? aws_iam_instance_profile.backup_profile[0].name : null)
 
   tags = {
     Name = "backend_ec2_privada_gratitude"

@@ -15,7 +15,7 @@ data "archive_file" "lambda_bronze_silver_zip" {
 resource "aws_lambda_function" "bronze_to_silver" {
   filename         = data.archive_file.lambda_bronze_silver_zip.output_path
   function_name    = "${var.project_name}-bronze-to-silver-${var.environment}"
-  role            = data.aws_iam_role.lab_role.arn
+  role            = var.lab_role_arn
   handler         = "lambda_bronze_to_silver.lambda_handler"
   runtime         = "python3.11"
   timeout         = 900   # 15 minutos (máximo AWS Lambda)
@@ -51,7 +51,7 @@ data "archive_file" "lambda_silver_gold_zip" {
 resource "aws_lambda_function" "silver_to_gold" {
   filename         = data.archive_file.lambda_silver_gold_zip.output_path
   function_name    = "${var.project_name}-silver-to-gold-${var.environment}"
-  role            = data.aws_iam_role.lab_role.arn
+  role            = var.lab_role_arn
   handler         = "lambda_silver_to_gold.lambda_handler"
   runtime         = "python3.11"
   timeout         = 900   # 15 minutos (máximo AWS Lambda)

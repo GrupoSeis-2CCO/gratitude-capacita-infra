@@ -55,6 +55,60 @@ resource "aws_s3_bucket" "jar_backend" {
   }
 }
 
+# Bucket para backups do banco de dados
+resource "aws_s3_bucket" "db_backups" {
+  count         = var.backup_bucket_name == "" ? 1 : 0
+  bucket        = "gratitude-db-backups-${random_string.bucket_aleatorio.result}"
+  force_destroy = true
+  tags = {
+    Name        = "DB Backups"
+    Environment = var.environment
+    Purpose     = "Backups diarios do banco MySQL"
+  }
+}
+
+// Recursos separados recomendados pela provider para versioning, SSE e lifecycle
+resource "aws_s3_bucket_versioning" "db_backups_versioning" {
+  count  = var.backup_bucket_name == "" ? 1 : 0
+  bucket = aws_s3_bucket.db_backups[0].id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "db_backups_sse" {
+  count  = var.backup_bucket_name == "" ? 1 : 0
+  bucket = aws_s3_bucket.db_backups[0].id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "db_backups_lifecycle" {
+  count  = var.backup_bucket_name == "" ? 1 : 0
+  bucket = aws_s3_bucket.db_backups[0].id
+
+  rule {
+    id     = "backup-retention"
+    status = "Enabled"
+    # Aplica a regra a todo o bucket (prefix vazio)
+    filter {
+      prefix = ""
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = 90
+    }
+
+    expiration {
+      days = 365
+    }
+  }
+}
 # ====================================
 # BUCKETS DO PIPELINE DE DADOS
 # ====================================

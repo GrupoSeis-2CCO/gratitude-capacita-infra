@@ -25,7 +25,8 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# Data source para LabRole (AWS Academy)
-data "aws_iam_role" "lab_role" {
-  name = "LabRole"
-}
+# NOTE: Removed the `data "aws_iam_role" "lab_role"` data source because
+# some execution identities have an explicit deny for iam:GetRole which
+# causes `terraform plan`/`apply` to fail with 403. Use the variable
+# `var.lab_role_arn` (declared in `variaveis.tf`) to pass the ARN of the
+# role you want to reference instead of querying it at plan time.
