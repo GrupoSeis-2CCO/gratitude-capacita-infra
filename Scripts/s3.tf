@@ -38,6 +38,14 @@ resource "aws_s3_bucket" "gold" {
   }
 }
 
+resource "aws_s3_bucket" "imagens" {
+  bucket = "gratitude-imagens-frontend"
+  force_destroy = true
+  tags = {
+    Name = "gratitude-imagens"
+  }
+}
+
 # Bucket para deploy automatico do JAR do backend
 resource "aws_s3_bucket" "deploy" {
   bucket = "gratitude-deploy-${random_string.bucket_aleatorio.result}"
