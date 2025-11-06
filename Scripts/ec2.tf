@@ -6,6 +6,7 @@ resource "aws_instance" "ec2_publica_gratitude_1" {
   subnet_id     = aws_subnet.subrede_publica_gratitude.id
   vpc_security_group_ids = [aws_security_group.sg_publica_gratitude.id]
   associate_public_ip_address = true
+  iam_instance_profile        = "LabInstanceProfile"
 
   # User data - Instala Docker, NGINX e configura diretórios
   user_data = file("${path.module}/user-data-frontend.sh")
@@ -23,6 +24,7 @@ resource "aws_instance" "ec2_privada_gratitude_bd" {
   subnet_id     = aws_subnet.subrede_privada_gratitude.id
   vpc_security_group_ids = [aws_security_group.sg_privada_bd_gratitude.id]
   associate_public_ip_address = false
+  iam_instance_profile        = "LabInstanceProfile"
 
   tags = {
     Name = "banco_ec2_privada_gratitude"
@@ -36,6 +38,7 @@ resource "aws_instance" "ec2_privada_gratitude_backend" {
   subnet_id                   = aws_subnet.subrede_privada_gratitude.id
   vpc_security_group_ids      = [aws_security_group.sg_privada_backend_gratitude.id]
   associate_public_ip_address = false
+  iam_instance_profile        = "LabInstanceProfile"
 
   # User data - Prepara ambiente (MySQL, Java, diretórios)
   user_data = templatefile("${path.module}/user-data-backend.sh", {
@@ -45,6 +48,10 @@ resource "aws_instance" "ec2_privada_gratitude_backend" {
     bronze_bucket       = aws_s3_bucket.bronze.id
     silver_bucket       = aws_s3_bucket.silver.id
     gold_bucket         = aws_s3_bucket.gold.id
+    # Variáveis para backup automático
+    backup_bucket_name  = aws_s3_bucket.backup_mysql.id
+    sns_topic_arn       = aws_sns_topic.backup_notifications.arn
+    aws_region          = data.aws_region.current.name
   })
   user_data_replace_on_change = true
 
@@ -57,6 +64,8 @@ resource "aws_instance" "ec2_privada_gratitude_backend" {
     aws_nat_gateway.nat,
     aws_s3_bucket.bronze,
     aws_s3_bucket.silver,
-    aws_s3_bucket.gold
+    aws_s3_bucket.gold,
+    aws_s3_bucket.backup_mysql,
+    aws_sns_topic.backup_notifications
   ]
 }

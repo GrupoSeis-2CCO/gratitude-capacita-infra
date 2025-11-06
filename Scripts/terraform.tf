@@ -29,3 +29,6 @@ provider "aws" {
 data "aws_iam_role" "lab_role" {
   name = "LabRole"
 }
+
+# Data source para região atual
+data "aws_region" "current" {}

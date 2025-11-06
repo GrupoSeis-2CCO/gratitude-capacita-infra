@@ -62,3 +62,24 @@ variable "environment" {
   type        = string
   default     = "dev"
 }
+
+variable "projeto" {
+  description = "Nome do projeto para tags"
+  type        = string
+  default     = "gratitude-capacita"
+}
+
+variable "ambiente" {
+  description = "Ambiente (dev, homolog, prod)"
+  type        = string
+  default     = "prod"
+}
+
+# ====================================
+# VARIÁVEIS PARA BACKUP AUTOMÁTICO
+# ====================================
+
+variable "admin_email" {
+  description = "Email do administrador para receber notificações de backup"
+  type        = string
+}

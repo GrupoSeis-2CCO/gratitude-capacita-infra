@@ -31,3 +31,4 @@ crash.*.log
 # OS
 .DS_Store
 Thumbs.db
+workflow-backend-corrigido.yml
