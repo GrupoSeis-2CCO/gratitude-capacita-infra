@@ -29,6 +29,10 @@ resource "aws_instance" "ec2_privada_gratitude_bd" {
   tags = {
     Name = "banco_ec2_privada_gratitude"
   }
+
+  depends_on = [ 
+    aws_s3_bucket.imagens
+   ]
 }
 
 resource "aws_instance" "ec2_privada_gratitude_backend" {
@@ -45,9 +49,7 @@ resource "aws_instance" "ec2_privada_gratitude_backend" {
     mysql_root_password = var.mysql_root_password
     database_user       = var.database_user
     database_password   = var.database_password
-    bronze_bucket       = aws_s3_bucket.bronze.id
-    silver_bucket       = aws_s3_bucket.silver.id
-    gold_bucket         = aws_s3_bucket.gold.id
+    imagens_bucket       = aws_s3_bucket.imagens.id
     # Variáveis para backup automático
     backup_bucket_name  = aws_s3_bucket.backup_mysql.id
     sns_topic_arn       = aws_sns_topic.backup_notifications.arn
@@ -62,9 +64,7 @@ resource "aws_instance" "ec2_privada_gratitude_backend" {
   depends_on = [
     aws_instance.ec2_publica_gratitude_1,
     aws_nat_gateway.nat,
-    aws_s3_bucket.bronze,
-    aws_s3_bucket.silver,
-    aws_s3_bucket.gold,
+    aws_s3_bucket.imagens,
     aws_s3_bucket.backup_mysql,
     aws_sns_topic.backup_notifications
   ]

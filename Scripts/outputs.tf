@@ -14,26 +14,6 @@ output "backend_private_ip" {
   description = "IP privado da EC2 Backend"
 }
 
-output "deploy_bucket_name" {
-  value       = aws_s3_bucket.deploy.id
-  description = "Nome do bucket S3 para deploy"
-}
-
-output "bronze_bucket_name" {
-  value       = aws_s3_bucket.bronze.id
-  description = "Nome do bucket Bronze"
-}
-
-output "silver_bucket_name" {
-  value       = aws_s3_bucket.silver.id
-  description = "Nome do bucket Silver"
-}
-
-output "gold_bucket_name" {
-  value       = aws_s3_bucket.gold.id
-  description = "Nome do bucket Gold"
-}
-
 output "ssh_bastion_command" {
   value       = "ssh -i keys/vockey.pem ubuntu@${aws_instance.ec2_publica_gratitude_1.public_ip}"
   description = "Comando SSH para conectar no Bastion"

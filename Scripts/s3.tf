@@ -14,52 +14,11 @@ resource "random_string" "bucket_aleatorio" {
 # ====================================
 
 # Buckets S3 para Bronze, Silver e Gold
-resource "aws_s3_bucket" "bronze" {
-  bucket = "gratitude-capacita-bronze"
-  force_destroy = true
-  tags = {
-    Name = "gratitude-bronze"
-  }
-}
-
-resource "aws_s3_bucket" "silver" {
-  bucket = "gratitude-capacita-silver"
-  force_destroy = true
-  tags = {
-    Name = "gratitude-silver"
-  }
-}
-
-resource "aws_s3_bucket" "gold" {
-  bucket = "gratitude-capacita-gold"
-  force_destroy = true
-  tags = {
-    Name = "gratitude-gold"
-  }
-}
-
 resource "aws_s3_bucket" "imagens" {
   bucket = "gratitude-imagens-frontend"
   force_destroy = true
   tags = {
     Name = "gratitude-imagens"
-  }
-}
-
-# Bucket para deploy automatico do JAR do backend
-resource "aws_s3_bucket" "deploy" {
-  bucket = "gratitude-deploy-${random_string.bucket_aleatorio.result}"
-  force_destroy = true
-  tags = {
-    Name = "gratitude-deploy"
-  }
-}
-
-resource "aws_s3_bucket" "jar_backend" {
-  bucket = "gratitude-jar-backend"
-  force_destroy = true
-  tags = {
-    Name = "gratitude-jar-backend"
   }
 }
 
@@ -69,7 +28,7 @@ resource "aws_s3_bucket" "jar_backend" {
 
 # Bucket Bronze - dados originais CSV
 resource "aws_s3_bucket" "bronze_bucket" {
-  bucket        = "bronze-gratitude-analise-2025"
+  bucket        = "gratitude-capacita-bronze-nov26"
   force_destroy = true
 
   tags = {
@@ -81,7 +40,7 @@ resource "aws_s3_bucket" "bronze_bucket" {
 
 # Bucket Silver - One Big Table
 resource "aws_s3_bucket" "silver_bucket" {
-  bucket        = "silver-gratitude-analise-2025"
+  bucket        = "gratitude-capacita-silver-nov26"
   force_destroy = true
 
   tags = {
@@ -93,7 +52,7 @@ resource "aws_s3_bucket" "silver_bucket" {
 
 # Bucket Gold - Tabelas Grafana
 resource "aws_s3_bucket" "gold_bucket" {
-  bucket        = "gold-gratitude-analise-2025"
+  bucket        = "gratitude-capacita-gold-nov26"
   force_destroy = true
 
   tags = {

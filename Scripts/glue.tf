@@ -12,7 +12,7 @@ resource "aws_glue_catalog_database" "gratitude_analytics" {
 
 # Bucket para resultados Athena
 resource "aws_s3_bucket" "athena_results" {
-  bucket        = "athena-results-gratitude-analise-2025"
+  bucket        = "gratitude-athena-results-nov26"
   force_destroy = true
 
   tags = {

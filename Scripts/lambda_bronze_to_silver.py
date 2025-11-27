@@ -201,22 +201,33 @@ def create_one_big_table(bronze_data):
     # Base da ONE BIG TABLE: ratings implícitos + dados sintéticos
     one_big_table = []
     
-    # 1. PROCESSAR RATINGS IMPLÍCITOS (dados originais) - VERSÃO SIMPLIFICADA
+    # 1. PROCESSAR RATINGS IMPLÍCITOS (dados originais) - COM ENRIQUECIMENTO
+    logger.info("📝 Processando ratings implícitos...")
     for implicit in implicit_en + implicit_fr:
         user_id = implicit.get('user_id')
         item_id = implicit.get('item_id')
         
         if user_id and item_id:
-            # Criar registro super simplificado
+            # Buscar dados do usuário
+            user_data = users_map.get(user_id, {})
+            
+            # Buscar dados do item
+            item_data = items_map.get(item_id, {})
+            
+            # Buscar rating explícito se existir
+            explicit_key = f"{user_id}_{item_id}"
+            explicit_data = explicit_ratings.get(explicit_key, {})
+            
+            # Criar registro enriquecido com todos os dados disponíveis
             record = {
                 'user_id': user_id,
                 'item_id': item_id,
                 'record_type': 'implicit_rating',
                 'implicit_rating': '1',
-                'explicit_rating': '',
-                'user_language': '',
-                'item_name': '',
-                'item_type': '',
+                'explicit_rating': explicit_data.get('explicit_rating', ''),
+                'user_language': user_data.get('user_language', ''),
+                'item_name': item_data.get('item_name', ''),
+                'item_type': item_data.get('item_type', ''),
                 'session_duration': '',
                 'activity_type': 'implicit_view',
                 'progress_percent': '',
@@ -230,13 +241,18 @@ def create_one_big_table(bronze_data):
     # 2. PROCESSAR DADOS SINTÉTICOS - USER SESSIONS
     logger.info("🤖 Adicionando dados sintéticos de user_sessions...")
     for session in user_sessions_synthetic:
+        user_id = session.get('user_id', '')
+        
+        # Buscar dados do usuário
+        user_data = users_map.get(user_id, {})
+        
         record = {
-            'user_id': session.get('user_id', ''),
+            'user_id': user_id,
             'item_id': '',
             'record_type': 'user_session',
             'implicit_rating': '',
             'explicit_rating': '',
-            'user_language': '',
+            'user_language': user_data.get('user_language', ''),
             'item_name': '',
             'item_type': '',
             'session_duration': session.get('duration_minutes', ''),
@@ -250,15 +266,22 @@ def create_one_big_table(bronze_data):
     # 3. PROCESSAR DADOS SINTÉTICOS - USER ACTIVITIES
     logger.info("🤖 Adicionando dados sintéticos de user_activities...")
     for activity in user_activities_synthetic:
+        user_id = activity.get('user_id', '')
+        item_id = activity.get('item_id', '')
+        
+        # Buscar dados do usuário e do item
+        user_data = users_map.get(user_id, {})
+        item_data = items_map.get(item_id, {})
+        
         record = {
-            'user_id': activity.get('user_id', ''),
-            'item_id': activity.get('item_id', ''),
+            'user_id': user_id,
+            'item_id': item_id,
             'record_type': 'user_activity',
             'implicit_rating': '',
             'explicit_rating': '',
-            'user_language': '',
-            'item_name': '',
-            'item_type': '',
+            'user_language': user_data.get('user_language', ''),
+            'item_name': item_data.get('item_name', ''),
+            'item_type': item_data.get('item_type', ''),
             'session_duration': activity.get('time_spent_minutes', ''),
             'activity_type': activity.get('activity_type', ''),
             'progress_percent': activity.get('completion_percentage', ''),
@@ -270,15 +293,22 @@ def create_one_big_table(bronze_data):
     # 4. PROCESSAR DADOS SINTÉTICOS - USER PROGRESS
     logger.info("🤖 Adicionando dados sintéticos de user_progress...")
     for progress in user_progress_synthetic:
+        user_id = progress.get('user_id', '')
+        item_id = progress.get('item_id', '')
+        
+        # Buscar dados do usuário e do item
+        user_data = users_map.get(user_id, {})
+        item_data = items_map.get(item_id, {})
+        
         record = {
-            'user_id': progress.get('user_id', ''),
-            'item_id': progress.get('item_id', ''),
+            'user_id': user_id,
+            'item_id': item_id,
             'record_type': 'user_progress',
             'implicit_rating': '',
             'explicit_rating': '',
-            'user_language': '',
-            'item_name': '',
-            'item_type': '',
+            'user_language': user_data.get('user_language', ''),
+            'item_name': item_data.get('item_name', ''),
+            'item_type': item_data.get('item_type', ''),
             'session_duration': progress.get('time_spent_minutes', ''),
             'activity_type': 'course_progress',
             'progress_percent': progress.get('progress_percent', ''),
