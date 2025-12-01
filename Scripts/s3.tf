@@ -15,7 +15,7 @@ resource "random_string" "bucket_aleatorio" {
 
 # Buckets S3 para Bronze, Silver e Gold
 resource "aws_s3_bucket" "imagens" {
-  bucket = "gratitude-imagens-frontend-${random_string.bucket_aleatorio.result}"
+  bucket = "gratitude-imagens-frontend"
   force_destroy = true
   tags = {
     Name = "gratitude-imagens"
