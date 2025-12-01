@@ -83,3 +83,18 @@ variable "admin_email" {
   description = "Email do administrador para receber notificações de backup"
   type        = string
 }
+
+# ====================================
+# VARIÁVEIS PARA EMAIL (GMAIL SMTP)
+# ====================================
+
+variable "mail_username" {
+  description = "Email Gmail para envio de notificações (ex: notificacoes.gratitude@gmail.com)"
+  type        = string
+}
+
+variable "mail_password" {
+  description = "Senha de App do Gmail (16 caracteres, gerar em myaccount.google.com/apppasswords)"
+  type        = string
+  sensitive   = true
+}

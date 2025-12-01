@@ -228,6 +228,27 @@ SNS_TOPIC_ARN=${sns_topic_arn}
 AWS_REGION=${aws_region}
 ENV_BACKUP
 
+# ========================================
+# VARIÁVEIS DE AMBIENTE PARA A APLICAÇÃO
+# ========================================
+echo "=== Configurando variáveis de ambiente para a aplicação ==="
+
+cat >> /etc/environment <<ENV_APP
+# Email Configuration (Gmail SMTP)
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=${mail_username}
+MAIL_PASSWORD=${mail_password}
+ENV_APP
+
+# Exportar também para a sessão atual
+export MAIL_HOST=smtp.gmail.com
+export MAIL_PORT=587
+export MAIL_USERNAME="${mail_username}"
+export MAIL_PASSWORD="${mail_password}"
+
+echo "=== ✅ Variáveis de email configuradas ==="
+
 # Configurar cron job para executar todos os dias às 02:00 AM
 CRON_LOG="/var/log/backup_mysql_cron.log"
 touch "$${CRON_LOG}"

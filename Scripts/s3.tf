@@ -15,10 +15,56 @@ resource "random_string" "bucket_aleatorio" {
 
 # Buckets S3 para Bronze, Silver e Gold
 resource "aws_s3_bucket" "imagens" {
-  bucket = "gratitude-imagens-frontend"
+  bucket = "gratitude-imagens-frontend-${random_string.bucket_aleatorio.result}"
   force_destroy = true
   tags = {
     Name = "gratitude-imagens"
+  }
+}
+
+# Desabilitar bloqueio de acesso público para o bucket de imagens
+resource "aws_s3_bucket_public_access_block" "imagens_public_access" {
+  bucket = aws_s3_bucket.imagens.id
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+# Política de bucket para permitir leitura pública das imagens
+resource "aws_s3_bucket_policy" "imagens_policy" {
+  bucket = aws_s3_bucket.imagens.id
+  depends_on = [aws_s3_bucket_public_access_block.imagens_public_access]
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "PublicReadGetObject"
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.imagens.arn}/*"
+      }
+    ]
+  })
+}
+
+# Bucket para deploy automatico do JAR do backend
+resource "aws_s3_bucket" "deploy" {
+  bucket = "gratitude-deploy-${random_string.bucket_aleatorio.result}"
+  force_destroy = true
+  tags = {
+    Name = "gratitude-deploy"
+  }
+}
+
+resource "aws_s3_bucket" "jar_backend" {
+  bucket = "gratitude-jar-backend"
+  force_destroy = true
+  tags = {
+    Name = "gratitude-jar-backend"
   }
 }
 
