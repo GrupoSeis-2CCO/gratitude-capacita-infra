@@ -54,6 +54,9 @@ resource "aws_instance" "ec2_privada_gratitude_backend" {
     backup_bucket_name  = aws_s3_bucket.backup_mysql.id
     sns_topic_arn       = aws_sns_topic.backup_notifications.arn
     aws_region          = data.aws_region.current.name
+    # Variáveis para email (SMTP)
+    mail_username       = var.mail_username
+    mail_password       = var.mail_password
   })
   user_data_replace_on_change = true
 
