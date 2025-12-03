@@ -37,9 +37,11 @@ output "mysql_local_command" {
 output "s3_buckets" {
   description = "S3 buckets criados para pipeline de dados"
   value = {
-    bronze = aws_s3_bucket.bronze_bucket.id
-    silver = aws_s3_bucket.silver_bucket.id
-    gold   = aws_s3_bucket.gold_bucket.id
+    bronze    = aws_s3_bucket.bronze_bucket.id
+    silver    = aws_s3_bucket.silver_bucket.id
+    gold      = aws_s3_bucket.gold_bucket.id
+    imagens   = aws_s3_bucket.imagens.id
+    apostilas = aws_s3_bucket.apostilas.id
   }
 }
 
