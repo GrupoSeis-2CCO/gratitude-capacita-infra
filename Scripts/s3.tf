@@ -51,6 +51,19 @@ resource "aws_s3_bucket_policy" "imagens_policy" {
   })
 }
 
+# Configuração CORS para permitir fetch do frontend
+resource "aws_s3_bucket_cors_configuration" "imagens_cors" {
+  bucket = aws_s3_bucket.imagens.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "HEAD"]
+    allowed_origins = ["*"]
+    expose_headers  = ["Content-Length", "Content-Type"]
+    max_age_seconds = 3600
+  }
+}
+
 # Bucket para deploy automatico do JAR do backend
 resource "aws_s3_bucket" "deploy" {
   bucket = "gratitude-deploy-${random_string.bucket_aleatorio.result}"
@@ -107,6 +120,19 @@ resource "aws_s3_bucket_policy" "apostilas_policy" {
       }
     ]
   })
+}
+
+# Configuração CORS para permitir fetch do frontend
+resource "aws_s3_bucket_cors_configuration" "apostilas_cors" {
+  bucket = aws_s3_bucket.apostilas.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "HEAD"]
+    allowed_origins = ["*"]
+    expose_headers  = ["Content-Length", "Content-Type", "Content-Disposition"]
+    max_age_seconds = 3600
+  }
 }
 
 # ====================================
