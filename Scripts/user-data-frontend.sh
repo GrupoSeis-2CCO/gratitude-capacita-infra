@@ -54,7 +54,7 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    # Proxy reverso para o backend no Droplet DigitalOcean
+    # Proxy reverso para o backend
     location /api/ {
         proxy_pass http://BACKEND_HOST:BACKEND_PORT/;
         proxy_http_version 1.1;

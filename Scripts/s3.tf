@@ -9,10 +9,6 @@ resource "random_string" "bucket_aleatorio" {
   upper   = false
 }
 
-# ====================================
-# BUCKETS ORIGINAIS DO PROJETO
-# ====================================
-
 # Buckets S3 para Bronze, Silver e Gold
 resource "aws_s3_bucket" "imagens" {
   bucket = "gratitude-imagens-frontend"

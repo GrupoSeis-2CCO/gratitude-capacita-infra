@@ -334,8 +334,8 @@ def save_one_big_table(s3_client, silver_bucket, one_big_table):
         logger.warning("⚠️ ONE BIG TABLE vazia - nada para salvar")
         return
     
-    # Nome do arquivo - sempre usar o mesmo nome para compatibilidade
-    silver_key = "silver/one_big_table.csv"
+    # Nome do arquivo - direto na raiz do bucket
+    silver_key = "one_big_table.csv"
     
     # Schema fixo para garantir consistência
     fixed_fieldnames = [
